@@ -10,9 +10,43 @@ y_val = np.load("./data/subsamp_data/processed_y_val.npy")
 
 clf = LogisticRegression(C=100).fit(X_train, y_train)
 
-print('Accuracy of Logistic regression classifier on training set: {:.2f}'
-     .format(clf.score(X_train, y_train)))
-print('Accuracy of Logistic regression classifier on validation set: {:.2f}'
-     .format(clf.score(X_val, y_val)))
-print('Accuracy of Logistic regression classifier on test set: {:.2f}'
-     .format(clf.score(X_test, y_test)))
+# print('Accuracy of Logistic regression classifier on training set: {:.2f}'
+#      .format(clf.score(X_train, y_train)))
+# print('Accuracy of Logistic regression classifier on validation set: {:.2f}'
+#      .format(clf.score(X_val, y_val)))
+# print('Accuracy of Logistic regression classifier on test set: {:.2f}'
+#      .format(clf.score(X_test, y_test)))
+
+val_label_predict = clf.predict(X_val)
+
+TP = 0
+FP = 0
+TN = 0
+FN = 0
+
+for index in range(len(y_val)):
+
+    # fraud transaction
+    if y_val[index] == 1:
+
+        if val_label_predict[index] == 1:
+            TP += 1
+        else:
+            FN += 1
+
+    # normal transaction
+    else:
+        if val_label_predict[index] == 0:
+            TN += 1
+        else:
+            FP += 1
+
+print('TP count:    {}'.format(TP))
+print('FP count:    {}'.format(FP))
+print('TN count:    {}'.format(TN))
+print('FN count:    {}'.format(FN))
+
+print('Precision rate:  {}'.format(TP/(TP+FP)))
+print('Recall rate: {}'.format(TP/(TP+FN)))
+
+print('Mean score:  {}'.format(clf.score(X_val,y_val)))
