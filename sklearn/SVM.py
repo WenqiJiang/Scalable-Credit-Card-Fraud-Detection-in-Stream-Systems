@@ -1,29 +1,31 @@
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 
 use_origin = False
 
 # if use_origin = True, use original dataset
 if use_origin:
     
-    train_features = np.load("./data/origin_data/X_train.npy")
-    train_label = np.load("./data/origin_data/y_train.npy")
+    train_features = np.load("../data/origin_data/X_train.npy")
+    train_label = np.load("../data/origin_data/y_train.npy")
 
-    val_features = np.load("./data/origin_data/X_val.npy")
-    val_label = np.load("./data/origin_data/y_val.npy")
+    val_features = np.load("../data/origin_data/X_val.npy")
+    val_label = np.load("../data/origin_data/y_val.npy")
 
 
 
 # if use_origin = False, use refined dataset
 else:
 
-    train_features = np.load("./data/subsamp_data/processed_X_train.npy")
-    train_label = np.load("./data/subsamp_data/processed_y_train.npy")
+    train_features = np.load("../data/subsamp_data/processed_X_train.npy")
+    train_label = np.load("../data/subsamp_data/processed_y_train.npy")
 
-    val_features = np.load("./data/subsamp_data/processed_X_val.npy")
-    val_label = np.load("./data/subsamp_data/processed_y_val.npy")
+    val_features = np.load("../data/subsamp_data/processed_X_val.npy")
+    val_label = np.load("../data/subsamp_data/processed_y_val.npy")
 
-svc = SVC(C=100,class_weight = {0:1,1:100}).fit(train_features,train_label)        
+svc = LinearSVC(C=100,class_weight = {0:1,1:100}).fit(train_features,train_label)
+print(type(svc.coef_))
+print(svc.coef_[0], '\n', svc.intercept_[0])
 
 val_label_predict = svc.predict(val_features)
 
