@@ -1,12 +1,12 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-X_train = np.load("./data/subsamp_data/processed_X_train.npy")
-X_test = np.load("./data/subsamp_data/processed_X_test.npy")
-X_val = np.load("./data/subsamp_data/processed_X_val.npy")
-y_train = np.load("./data/subsamp_data/processed_y_train.npy")
-y_test = np.load("./data/subsamp_data/processed_y_test.npy")
-y_val = np.load("./data/subsamp_data/processed_y_val.npy")
+X_train = np.load("../data/subsamp_data/processed_X_train.npy")
+X_test = np.load("../data/subsamp_data/processed_X_test.npy")
+X_val = np.load("../data/subsamp_data/processed_X_val.npy")
+y_train = np.load("../data/subsamp_data/processed_y_train.npy")
+y_test = np.load("../data/subsamp_data/processed_y_test.npy")
+y_val = np.load("../data/subsamp_data/processed_y_val.npy")
 
 # X_train = np.load("./data/origin_data/X_train.npy")
 # X_test = np.load("./data/origin_data/X_test.npy")
@@ -18,6 +18,9 @@ y_val = np.load("./data/subsamp_data/processed_y_val.npy")
 clf = LogisticRegression(C=100, class_weight={0: 0.1, 1: 0.9}).fit(X_train, y_train)
 coef = clf.coef_[0]
 intercept = clf.intercept_ [0]
+
+np.save("model_LR/w", clf.coef_[0])
+np.save("model_LR/b", clf.intercept_[0])
 print(coef, '\n', intercept)
 
 # print('Accuracy of Logistic regression classifier on training set: {:.2f}'

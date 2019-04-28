@@ -24,8 +24,9 @@ else:
     val_label = np.load("../data/subsamp_data/processed_y_val.npy")
 
 svc = LinearSVC(C=100,class_weight = {0:1,1:100}).fit(train_features,train_label)
-print(type(svc.coef_))
-print(svc.coef_[0], '\n', svc.intercept_[0])
+
+np.save("model_SVM/w", svc.coef_[0])
+np.save("model_SVM/b", svc.intercept_[0])
 
 val_label_predict = svc.predict(val_features)
 
