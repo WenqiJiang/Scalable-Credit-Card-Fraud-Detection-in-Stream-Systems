@@ -9,22 +9,22 @@ use_origin = False
 # if use_origin = True, use original dataset
 if use_origin:
 
-    train_features = np.load("./data/origin_data/X_train.npy")
-    train_label = np.load("./data/origin_data/y_train.npy")
+    train_features = np.load("../data/origin_data/X_train.npy")
+    train_label = np.load("../data/origin_data/y_train.npy")
 
-    val_features = np.load("./data/origin_data/X_val.npy")
-    val_label = np.load("./data/origin_data/y_val.npy")
+    val_features = np.load("../data/origin_data/X_val.npy")
+    val_label = np.load("../data/origin_data/y_val.npy")
 
 
 
 # if use_origin = False, use refined dataset
 else:
 
-    train_features = np.load("./data/subsamp_data/processed_X_train.npy")
-    train_label = np.load("./data/subsamp_data/processed_y_train.npy")
+    train_features = np.load("../data/subsamp_data/processed_X_train.npy")
+    train_label = np.load("../data/subsamp_data/processed_y_train.npy")
 
-    val_features = np.load("./data/subsamp_data/processed_X_val.npy")
-    val_label = np.load("./data/subsamp_data/processed_y_val.npy")
+    val_features = np.load("../data/subsamp_data/processed_X_val.npy")
+    val_label = np.load("../data/subsamp_data/processed_y_val.npy")
 
 
 clf = RandomForestClassifier(n_estimators=100, max_depth=10,random_state=0,class_weight = {0:1,1:100})

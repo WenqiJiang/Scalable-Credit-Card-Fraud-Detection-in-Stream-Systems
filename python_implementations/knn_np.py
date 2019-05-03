@@ -44,13 +44,13 @@ def prediction_accuracy(predicted_labels, original_labels):
 
 
 k = 5
-X_train = np.load("./data/subsamp_data/processed_X_train.npy")
-X_test = np.load("./data/subsamp_data/processed_X_test.npy")
-X_val = np.load("./data/subsamp_data/processed_X_val.npy")
-y_train = np.load("./data/subsamp_data/processed_y_train.npy")
-y_test = np.load("./data/subsamp_data/processed_y_test.npy")
-y_val = np.load("./data/subsamp_data/processed_y_val.npy")
+X_train = np.load("../data/subsamp_data/processed_X_train.npy")
+X_test = np.load("../data/subsamp_data/processed_X_test.npy")
+X_val = np.load("../data/subsamp_data/processed_X_val.npy")
+y_train = np.load("../data/subsamp_data/processed_y_train.npy")
+y_test = np.load("../data/subsamp_data/processed_y_test.npy")
+y_val = np.load("../data/subsamp_data/processed_y_val.npy")
 
-predicted_classes = kNN_test(X_train, X_test, y_train, y_test, k)
-final_accuracies = prediction_accuracy(predicted_classes, y_test)
+predicted_classes = kNN_test(X_train, X_val, y_train, y_val, k)
+final_accuracies = prediction_accuracy(predicted_classes, y_val)
 print(final_accuracies)
