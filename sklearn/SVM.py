@@ -36,5 +36,6 @@ np.save("model_SVM/b", svc.intercept_[0])
 start = time.perf_counter()
 val_label_predict = svc.predict(X_val)
 end = time.perf_counter()
+print("time consumed:", end - start)
 
 prec_recall(y_val, val_label_predict)

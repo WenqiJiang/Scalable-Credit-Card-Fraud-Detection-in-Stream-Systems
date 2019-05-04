@@ -229,10 +229,29 @@ def predictkNNClass(neighbors, y_train):
     sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
     return sortedVotes[0][0]
 
-def kNN(X_train, X_test, Y_train, k):
-    output_classes = []
-    for i in range(X_test.shape[0]):
-        output = get_neighbours(X_train, X_test[i], k)
+def kNN(X_train, x, Y_train, k):
+    """
+    X_test: tuple or list of tuples
+    """
+    
+    if type(x) == type((1,2)): # single tuple
+        input_FM = x[1]
+
+        output = get_neighbours(X_train, input_FM, k)
         predictedClass = predictkNNClass(output, Y_train)
-        output_classes.append(predictedClass)
-    return output_classes
+        
+        return (x[0], predictedClass)
+
+    else: # a list of tuples
+        input_FM = []
+        for i in range(len(x)):
+            input_FM.append(x[i][1])
+        input_FM = np.array(input_FM)
+
+        output_classes = []
+        for i in range(input_FM.shape[0]):
+            output = get_neighbours(X_train, input_FM[i], k)
+            predictedClass = predictkNNClass(output, Y_train)
+            output_classes.append((x[i], predictedClass))
+
+        return output_classes

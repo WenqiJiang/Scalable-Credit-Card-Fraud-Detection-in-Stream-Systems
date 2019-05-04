@@ -5,67 +5,44 @@ from sklearn.ensemble import RandomForestClassifier
 # load features and label from training set into array
 
 
-use_origin = False
+from prec_recall import prec_recall
 
-# if use_origin = True, use original dataset
-if use_origin:
+parser = argparse.ArgumentParser()
 
-    train_features = np.load("../data/origin_data/X_train.npy")
-    train_label = np.load("../data/origin_data/y_train.npy")
+parser.add_argument('--dataset', type=str, default="origin", help="origin / subsamp")
+parser.add_argument('--fraud_weight', type=float, default=1, help="usually larger than 1")
+parser.add_argument('--n_estimators', type=int, default=100, help="int larger than 1")
+parser.add_argument('--max_depth', type=int, default=10, help="int larger than 1")
 
-    val_features = np.load("../data/origin_data/X_val.npy")
-    val_label = np.load("../data/origin_data/y_val.npy")
+args = parser.parse_args()
+dataset = args.dataset
+fraud_weight = args.fraud_weight
+n_estimators = args.n_estimators
+max_depth = args.max_depth
 
-
-
-# if use_origin = False, use refined dataset
+if dataset == "subsample":
+    X_train = np.load("../data/subsamp_data/processed_X_train.npy")
+    y_train = np.load("../data/subsamp_data/processed_y_train.npy")
+elif dataset == "origin":
+    X_train = np.load("../data/origin_data/X_train.npy")
+    y_train = np.load("../data/origin_data/y_train.npy")
 else:
+    raise Exception("Unknown dataset name")
 
-    train_features = np.load("../data/subsamp_data/processed_X_train.npy")
-    train_label = np.load("../data/subsamp_data/processed_y_train.npy")
+# val / test always on the largest dataset
+X_val = np.load("../data/origin_data/X_val.npy")
+y_val = np.load("../data/origin_data/y_val.npy")
+X_test = np.load("../data/origin_data/X_test.npy")
+y_test = np.load("../data/origin_data/y_test.npy")
 
-    val_features = np.load("../data/subsamp_data/processed_X_val.npy")
-    val_label = np.load("../data/subsamp_data/processed_y_val.npy")
+clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=0,class_weight = {0:1,1:fraud_weight})
 
-
-clf = RandomForestClassifier(n_estimators=100, max_depth=10,random_state=0,class_weight = {0:1,1:100})
-
-clf.fit(train_features,train_label)
+clf.fit(X_train, y_train)
 
 start = time.perf_counter()
 val_label_predict = clf.predict(val_features)
 end = time.perf_counter()
 
-print("time:\t{}\nresult:\t{}".format(end - start, val_label_predict[0:10]))
+print("time consumed:", end - start)
 
-TP = 0
-FP = 0
-TN = 0
-FN = 0
-
-for index in range(len(val_label)):
-
-    # fraud transaction
-    if val_label[index] == 1:
-
-        if val_label_predict[index] == 1:
-            TP += 1
-        else:
-            FN += 1
-
-    # normal transaction  
-    else:
-        if val_label_predict[index] == 0:
-            TN += 1
-        else:
-            FP += 1
-
-print('TP count:    {}'.format(TP))
-print('FP count:    {}'.format(FP))
-print('TN count:    {}'.format(TN))
-print('FN count:    {}'.format(FN))
-
-print('Precision rate:  {}'.format(TP/(TP+FP)))
-print('Recall rate: {}'.format(TP/(TP+FN)))
-
-print('Mean score:  {}'.format(clf.score(val_features,val_label)))
+prec_recall(y_val, val_label_predict)

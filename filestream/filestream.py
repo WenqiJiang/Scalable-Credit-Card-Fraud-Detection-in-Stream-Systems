@@ -12,8 +12,8 @@ NN_weights = []
 NN_biases = []
 
 for i in range(1, 4):
-    NN_weights.append(np.load("../keras/models/w_{}.npy".format(i)))
-    NN_biases.append(np.load("../keras/models/b_{}.npy".format(i)))
+    NN_weights.append(np.load("../keras/models_best/w_{}.npy".format(i)))
+    NN_biases.append(np.load("../keras/models_best/b_{}.npy".format(i)))
 
 def loaded_neural_networks(x):
 	""" 
@@ -25,8 +25,8 @@ def loaded_neural_networks(x):
 	"""
 	return neural_networks(x, NN_weights, NN_biases)
 
-LR_w = np.load("../sklearn/model_LR/w.npy")
-LR_b = np.load("../sklearn/model_LR/b.npy")
+LR_w = np.load("../sklearn/model_LR/LR_best/w.npy")
+LR_b = np.load("../sklearn/model_LR/LR_best/b.npy")
 
 def loaded_logistic_regression(x):
 	"""
@@ -38,8 +38,8 @@ def loaded_logistic_regression(x):
 	"""
 	return logistic_regression(x, LR_w, LR_b)
 
-SVM_w = np.load("../sklearn/model_SVM/w.npy")
-SVM_b = np.load("../sklearn/model_SVM/b.npy")
+SVM_w = np.load("../sklearn/model_SVM/SVM_best/w.npy")
+SVM_b = np.load("../sklearn/model_SVM/SVM_best/b.npy")
 
 def loaded_SVM(x):
 	"""
@@ -72,7 +72,8 @@ def loaded_kNN(x):
 
 if __name__ == "__main__":
 
-	sc = SparkContext()
+	conf = SparkConf().setMaster("local[1]")
+	sc = SparkContext(conf=conf)
 
 	test_data = np.load("../data/origin_data/X_test.npy")
 	test_lable = np.load("../data/origin_data/y_test.npy")
@@ -98,9 +99,15 @@ if __name__ == "__main__":
 	end_SVM = time.perf_counter()
 	profiling_SVM = end_SVM - start_SVM
 
-	sc.parallelize(test_data).map(loaded_kNN).collect()
+	start_kNN = time.perf_counter()
+	kNN_result = sc.parallelize(test_data_tuples[:100]).map(loaded_kNN).collect()
+	end_kNN = time.perf_counter()
+	profiling_kNN = (end_kNN - start_kNN) * test_data.shape[0] / 100
+
 	print(NN_result[0:10])
 	print(LR_result[0:10])
 	print(SVM_result[0:10])
-	print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\t".format(profiling_NN, profiling_LR, profiling_SVM))
+	print(kNN_result[0:10])
+	print("Validation data number: {}".format(test_data.shape[0]))
+	print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\tkNN time: \t{}\t".format(profiling_NN, profiling_LR, profiling_SVM, profiling_kNN))
 	# print(kNN_result[0:10])
