@@ -13,7 +13,7 @@ if __name__ == "__main__":
     ssc = StreamingContext(sc, 1)
 
     # lines = ssc.socketTextStream('localhost', 8888)
-    lines = ssc.socketTextStream("localhost", 9999)
+    lines = ssc.socketTextStream("localhost", 9997)
     lines.pprint()
     counts = lines.flatMap(lambda line: line.split(" "))\
                   .map(lambda word: (word, 1))\

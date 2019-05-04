@@ -77,23 +77,32 @@ def SVM(x, SVM_w, SVM_b):
     return:
     the result lable
     """
-    if type(x) == type((1,2)):
+    if type(x) == type((1,2)): # a single tuple
         input_FM = x[1]
-    else:
+        output_FM = affine_forward(input_FM, SVM_w, SVM_b)
+        if output_FM > 0:
+            result = (x[0], 1)
+        else:
+            result = (x[0], 0)
+    else:   # a list of tuple
+        # preprocess 
         input_FM = []
         for i in range(len(x)):
             input_FM.append(x[i][1])
         input_FM = np.array(input_FM)
 
-    output_FM = affine_forward(input_FM, SVM_w, SVM_b)
-    result = np.zeros(input_FM.shape[0])
-    
-    # class 1: output_FM > 0:
-    result[np.where(output_FM >= 0)] = 1
+        output_FM = affine_forward(input_FM, SVM_w, SVM_b)
+        result_arr = np.zeros(input_FM.shape[0])
+        
+        # class 1: output_FM > 0:
+        result_arr[np.where(output_FM >= 0)] = 1
 
-    if type(x) == type((1,2)):
-        return (x[0], result)
-    else:
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], result_arr[i]))
+
+    return result
 
 
 def logistic_regression(x, LR_w, LR_b):
@@ -105,22 +114,33 @@ def logistic_regression(x, LR_w, LR_b):
     return:
     the result lable
     """
-    if type(x) == type((1,2)):
+    if type(x) == type((1,2)): # a single tuple
         input_FM = x[1]
-    else:
+        output_FM = affine_forward(input_FM, LR_w, LR_b)
+        prob = sigmoid(output_FM)
+        if prob >= 0.5:
+            result = (x[0], 1)
+        else:
+            result = (x[0], 0)
+    else: # a list of tuples
         input_FM = []
         for i in range(len(x)):
             input_FM.append(x[i][1])
         input_FM = np.array(input_FM)
 
-    output_FM = affine_forward(input_FM, LR_w, LR_b)
+        output_FM = affine_forward(input_FM, LR_w, LR_b)
+        
+        # if we don't want to know the probability, we can remove softmax
+        prob = sigmoid(output_FM)
+        result_arr = np.zeros(prob.shape)
+        result_arr[np.where(prob >= 0.5)] = 1
+
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], result_arr[i]))
     
-    # if we don't want to know the probability, we can remove softmax
-    prob = sigmoid(output_FM)
-    result = np.zeros(prob.shape)
-    result[np.where(prob >= 0.5)] = 1
-    
-    return (x[0], result)
+    return result
 
 
 def neural_networks(x, NN_weights, NN_biases):
@@ -132,36 +152,53 @@ def neural_networks(x, NN_weights, NN_biases):
     return:
     the result lable
     """
+    assert len(NN_weights) == len(NN_biases)
     
     # extract feature maps in tuples
     if type(x) == type((1,2)):
         input_FM = x[1]
+        for i in range(len(NN_weights)):
+            weight = NN_weights[i]
+            bias = NN_biases[i]
+            output_FM = affine_forward(input_FM, weight, bias)
+            if i != len(NN_weights) - 1:
+                output_FM = relu_forward(output_FM)
+            input_FM = output_FM
+        
+        # if we don't want to know the probability, we can remove sigmoid
+        prob = sigmoid(output_FM)
+        if prob >= 0.5:
+            result = (x[0], 1)
+        else:
+            result = (x[0], 0)
+
     else:
         input_FM = []
         for i in range(len(x)):
             input_FM.append(x[i][1])
         input_FM = np.array(input_FM)
     
-    assert len(NN_weights) == len(NN_biases)
     
-    for i in range(len(NN_weights)):
-        weight = NN_weights[i]
-        bias = NN_biases[i]
-        output_FM = affine_forward(input_FM, weight, bias)
-#        if len(output_FM.shape) == 1:
-#            output_FM = np.reshape(output_FM, (1, output_FM.shape[0]))
-        if i != len(NN_weights) - 1:
-            output_FM = relu_forward(output_FM)
-        input_FM = output_FM
-    
-    # if we don't want to know the probability, we can remove softmax
-    prob = sigmoid(output_FM)
-    result = np.zeros(prob.shape)
-    #     print("aaa", prob)
-    result[np.where(prob >= 0.5)] = 1
+        for i in range(len(NN_weights)):
+            weight = NN_weights[i]
+            bias = NN_biases[i]
+            output_FM = affine_forward(input_FM, weight, bias)
+            if i != len(NN_weights) - 1:
+                output_FM = relu_forward(output_FM)
+            input_FM = output_FM
+        
+        # if we don't want to know the probability, we can remove sigmoid
+        prob = sigmoid(output_FM)
+        result_arr = np.zeros(prob.shape)
+        #     print("aaa", prob)
+        result_arr[np.where(prob >= 0.5)] = 1
 
-    return (x[0], result)
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], result_arr[i]))
 
+    return result
 
 #############################################################
 #                               KNN                         #

@@ -1,63 +1,40 @@
 import numpy as np
+import time
+import argparse
+
 from sklearn.svm import LinearSVC
+from prec_recall import prec_recall
 
-use_origin = False
+parser = argparse.ArgumentParser()
 
-# if use_origin = True, use original dataset
-if use_origin:
-    
-    train_features = np.load("../data/origin_data/X_train.npy")
-    train_label = np.load("../data/origin_data/y_train.npy")
+parser.add_argument('--dataset', type=str, default="origin", help="origin / subsamp")
+parser.add_argument('--fraud_weight', type=float, default=1, help="usually larger than 1")
+args = parser.parse_args()
+dataset = args.dataset
+fraud_weight = args.fraud_weight
 
-    val_features = np.load("../data/origin_data/X_val.npy")
-    val_label = np.load("../data/origin_data/y_val.npy")
-
-
-
-# if use_origin = False, use refined dataset
+if dataset == "subsample":
+    X_train = np.load("../data/subsamp_data/processed_X_train.npy")
+    y_train = np.load("../data/subsamp_data/processed_y_train.npy")
+elif dataset == "origin":
+    X_train = np.load("../data/origin_data/X_train.npy")
+    y_train = np.load("../data/origin_data/y_train.npy")
 else:
+    raise Exception("Unknown dataset name")
 
-    train_features = np.load("../data/subsamp_data/processed_X_train.npy")
-    train_label = np.load("../data/subsamp_data/processed_y_train.npy")
+# val / test always on the largest dataset
+X_val = np.load("../data/origin_data/X_val.npy")
+y_val = np.load("../data/origin_data/y_val.npy")
+X_test = np.load("../data/origin_data/X_test.npy")
+y_test = np.load("../data/origin_data/y_test.npy")
 
-    val_features = np.load("../data/subsamp_data/processed_X_val.npy")
-    val_label = np.load("../data/subsamp_data/processed_y_val.npy")
-
-svc = LinearSVC(C=100,class_weight = {0:1,1:100}).fit(train_features,train_label)
+svc = LinearSVC(C=100,class_weight = {0:1,1:fraud_weight}, max_iter=5000).fit(X_train, y_train)
 
 np.save("model_SVM/w", svc.coef_[0])
 np.save("model_SVM/b", svc.intercept_[0])
 
-val_label_predict = svc.predict(val_features)
+start = time.perf_counter()
+val_label_predict = svc.predict(X_val)
+end = time.perf_counter()
 
-TP = 0
-FP = 0
-TN = 0
-FN = 0
-
-for index in range(len(val_label)):
-
-    # fraud transaction
-    if val_label[index] == 1:
-
-        if val_label_predict[index] == 1:
-            TP += 1
-        else:
-            FN += 1
-
-    # normal transaction  
-    else:
-        if val_label_predict[index] == 0:
-            TN += 1
-        else:
-            FP += 1
-
-print('TP count:    {}'.format(TP))
-print('FP count:    {}'.format(FP))
-print('TN count:    {}'.format(TN))
-print('FN count:    {}'.format(FN))
-
-print('Precision rate:  {}'.format(TP/(TP+FP)))
-print('Recall rate: {}'.format(TP/(TP+FN)))
-
-print('Mean score:  {}'.format(svc.score(val_features,val_label)))
+prec_recall(y_val, val_label_predict)

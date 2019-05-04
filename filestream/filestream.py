@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from pyspark import SparkConf, SparkContext
 from models import neural_networks, logistic_regression, SVM, kNN
@@ -69,8 +70,6 @@ def loaded_kNN(x):
 
 	return kNN(kNN_X_train, x, kNN_y_train, kNN_k)
 
-
-
 if __name__ == "__main__":
 
 	sc = SparkContext()
@@ -82,21 +81,26 @@ if __name__ == "__main__":
 	for i in range(test_data.shape[0]):
 		test_data_tuples.append((i, test_data[i]))
 
-	print()
-
 	x = sc.parallelize(test_data_tuples)
 
+	start_NN = time.perf_counter()
 	NN_result = x.map(loaded_neural_networks).collect()
-	LR_result = x.map(loaded_logistic_regression).collect()
-	SVM_result = x.map(loaded_SVM).collect()
-	# kNN_result = x.map(loaded_kNN).collect()
+	end_NN = time.perf_counter()
+	profiling_NN = end_NN - start_NN
 
+	start_LR = time.perf_counter()
+	LR_result = x.map(loaded_logistic_regression).collect()
+	end_LR = time.perf_counter()
+	profiling_LR = end_LR - start_LR
+
+	start_SVM = time.perf_counter()
+	SVM_result = x.map(loaded_SVM).collect()
+	end_SVM = time.perf_counter()
+	profiling_SVM = end_SVM - start_SVM
+
+	sc.parallelize(test_data).map(loaded_kNN).collect()
 	print(NN_result[0:10])
 	print(LR_result[0:10])
 	print(SVM_result[0:10])
+	print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\t".format(profiling_NN, profiling_LR, profiling_SVM))
 	# print(kNN_result[0:10])
-
-
-
-
-
