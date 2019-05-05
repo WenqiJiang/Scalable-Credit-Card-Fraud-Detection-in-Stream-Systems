@@ -3,6 +3,7 @@ import time
 
 from pyspark import SparkConf, SparkContext
 from models import neural_networks, logistic_regression, SVM, kNN
+from sklearn.ensemble import RandomForestClassifier
 
 #############################################################
 #        Neural Networks, Logistic Regression, SVM          #
@@ -56,8 +57,8 @@ def loaded_SVM(x):
 #############################################################
 
 kNN_k = 5
-kNN_X_train = np.load("../data/subsamp_data/processed_X_train.npy")
-kNN_y_train = np.load("../data/subsamp_data/processed_y_train.npy")
+kNN_X_train = np.load("../data/origin_data/X_train.npy")
+kNN_y_train = np.load("../data/origin_data/y_train.npy")
 
 def loaded_kNN(x):
 	"""
@@ -69,6 +70,22 @@ def loaded_kNN(x):
 	"""
 
 	return kNN(kNN_X_train, x, kNN_y_train, kNN_k)
+
+# RF_clf = RandomForestClassifier(n_estimators=1, max_depth=5,
+# 				random_state=0,class_weight = {0:1,1:1})
+# RF_clf.fit(kNN_X_train, kNN_y_train)
+
+# def loaded_RandomForest(x):
+# 	"""
+# 	function:
+# 	used for "map" function in spark,
+# 	whidh only takes 1 argument as input.
+
+# 	weights already in global variables RF_clf
+# 	"""
+# 	return RF_clf.predict(x)
+
+
 
 if __name__ == "__main__":
 
@@ -83,6 +100,9 @@ if __name__ == "__main__":
 		test_data_tuples.append((i, test_data[i]))
 
 	x = sc.parallelize(test_data_tuples)
+
+	# sc.parallelize(test_data).map(loaded_RandomForest).collect()
+	# print("finish Random Forest")
 
 	start_NN = time.perf_counter()
 	NN_result = x.map(loaded_neural_networks).collect()
@@ -110,4 +130,3 @@ if __name__ == "__main__":
 	print(kNN_result[0:10])
 	print("Validation data number: {}".format(test_data.shape[0]))
 	print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\tkNN time: \t{}\t".format(profiling_NN, profiling_LR, profiling_SVM, profiling_kNN))
-	# print(kNN_result[0:10])

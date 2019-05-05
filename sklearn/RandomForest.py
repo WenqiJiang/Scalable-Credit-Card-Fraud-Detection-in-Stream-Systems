@@ -1,5 +1,7 @@
 import numpy as np
 import time
+import argparse
+
 from sklearn.ensemble import RandomForestClassifier
 
 # load features and label from training set into array
@@ -40,7 +42,7 @@ clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,rand
 clf.fit(X_train, y_train)
 
 start = time.perf_counter()
-val_label_predict = clf.predict(val_features)
+val_label_predict = clf.predict(X_val)
 end = time.perf_counter()
 
 print("time consumed:", end - start)

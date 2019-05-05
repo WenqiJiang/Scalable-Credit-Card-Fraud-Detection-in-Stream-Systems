@@ -27,7 +27,7 @@ if __name__ == '__main__':
     print ('The server is ready to receive')
 
     message = b"adf adsf dfas"
-    for j in range(3):
+    for j in range(10):
         connectionSocket, addr = serverSocket.accept()
         for i in range(10):
             connectionSocket.send(message)
