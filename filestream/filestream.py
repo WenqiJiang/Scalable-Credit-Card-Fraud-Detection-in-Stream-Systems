@@ -20,7 +20,7 @@ def loaded_neural_networks(x):
 	""" 
 	function:
 	used for "map" function in spark,
-	whidh only takes 1 argument as input.
+	which only takes 1 argument as input.
 
 	weights already in global variables (NN_weights, NN_biases)
 	"""
@@ -33,7 +33,7 @@ def loaded_logistic_regression(x):
 	"""
 	function:
 	used for "map" function in spark,
-	whidh only takes 1 argument as input.
+	which only takes 1 argument as input.
 
 	weights already in global variables (LR_w, LR_b)
 	"""
@@ -46,7 +46,7 @@ def loaded_SVM(x):
 	"""
 	function:
 	used for "map" function in spark,
-	whidh only takes 1 argument as input.
+	which only takes 1 argument as input.
 
 	weights already in global variables (SVM_w, SVM_b)
 	"""
@@ -64,7 +64,7 @@ def loaded_kNN(x):
 	"""
 	function:
 	used for "map" function in spark,
-	whidh only takes 1 argument as input.
+	which only takes 1 argument as input.
 
 	weights already in global variables (kNN_k, kNN_X_train, kNN_y_train)
 	"""
@@ -79,7 +79,7 @@ def loaded_kNN(x):
 # 	"""
 # 	function:
 # 	used for "map" function in spark,
-# 	whidh only takes 1 argument as input.
+# 	which only takes 1 argument as input.
 
 # 	weights already in global variables RF_clf
 # 	"""
