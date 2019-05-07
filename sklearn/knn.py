@@ -43,4 +43,9 @@ val_label_predict = knn.predict(X_val_scaled)
 end = time.perf_counter()
 print("time:\t{}\nresult:\t{}".format(end - start, val_label_predict[0:10]))
 
+
+print("Valiadation:")
 prec_recall(y_val, val_label_predict)
+print("Test:")
+test_label_predict = knn.predict(X_test)
+prec_recall(y_test, test_label_predict)

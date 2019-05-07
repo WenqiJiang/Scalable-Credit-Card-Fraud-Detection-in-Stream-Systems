@@ -33,3 +33,4 @@ def prec_recall(label, predict):
 
     print('Precision rate:  {}'.format(TP/(TP+FP)))
     print('Recall rate: {}'.format(TP/(TP+FN)))
+    print('Accuracy：{}'.format((TP + TN) / (TP + TN + FP + FN)))

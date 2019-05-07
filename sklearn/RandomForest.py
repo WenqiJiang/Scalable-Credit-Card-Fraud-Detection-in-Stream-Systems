@@ -46,5 +46,8 @@ val_label_predict = clf.predict(X_val)
 end = time.perf_counter()
 
 print("time consumed:", end - start)
-
+print("Valiadation:")
 prec_recall(y_val, val_label_predict)
+print("Test:")
+test_label_predict = clf.predict(X_test)
+prec_recall(y_test, test_label_predict)

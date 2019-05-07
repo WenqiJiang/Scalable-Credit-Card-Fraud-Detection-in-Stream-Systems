@@ -6,11 +6,15 @@ from socket import socket, AF_INET, SOCK_STREAM
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=1, help="batch size, default 20")
+    parser.add_argument('--batch_size', type=int, default=1, help="batch size, default 1")
     parser.add_argument('--port', type=int, default=6666, help="network port")
+    parser.add_argument('--dataset', type=str, default="subsample", help="choices: subsample / origin")
     args = parser.parse_args()
     batch_size = args.batch_size
+    if batch_size >= 100:
+        raise Exception("Socket Error, does not support batch size more than 100 currently")
     serverPort = args.port
+    dataset = args.dataset
 
     serverSocket = socket(AF_INET,SOCK_STREAM) ## LISTENING SOCKET!!!
     serverSocket.bind(('localhost',serverPort))
@@ -30,8 +34,14 @@ if __name__ == '__main__':
 
     # load test data
     # datastream = np.load("../data/subsamp_data/processed_X_test.npy")
-    datastream = np.load("../data/origin_data/X_test.npy")
-    print('load data complete')
+    
+    if dataset == "subsample":
+        datastream = np.load("../data/subsamp_data/processed_X_test.npy")
+        test_lable = np.load("../data/subsamp_data/processed_y_test.npy")
+    if dataset == "origin":
+        raise Exception ("Almost all result of origin dataset are 0s, please use subsampled dataset for demo")
+        datastream = np.load("../data/origin_data/X_test.npy")
+        test_lable = np.load("../data/origin_data/y_test.npy")
 
     # initial concatenate str
     conca_string = '{} {} '.format(feed_freq,batch_size)

@@ -223,16 +223,23 @@ if __name__ == "__main__":
 	# dynamic: dynamically pick the algorithm given input speed 		 #
 	######################################################################
 	parser.add_argument('--option', type=str, default="normal", help="choices: profiling / dynamic / normal")
+	parser.add_argument('--dataset', type=str, default="subsample", help="choices: subsample / origin")
 	args = parser.parse_args()
 	batch_size = args.batch_size
 	option = args.option
+	dataset = args.dataset
 
 	conf = SparkConf().setMaster("local[1]")
 	sc = SparkContext(conf=conf)
 	sc.setLogLevel('OFF')
 
-	test_data = np.load("../data/origin_data/X_test.npy")
-	test_lable = np.load("../data/origin_data/y_test.npy")
+	if dataset == "subsample":
+		test_data = np.load("../data/subsamp_data/processed_X_test.npy")
+		test_lable = np.load("../data/subsamp_data/processed_y_test.npy")
+	if dataset == "origin":
+		raise Exception ("Almost all result of origin dataset are 0s, please use subsampled dataset for demo")
+		test_data = np.load("../data/origin_data/X_test.npy")
+		test_lable = np.load("../data/origin_data/y_test.npy")
 
 	test_data_tuples = []
 	for i in range(test_data.shape[0]):
@@ -359,9 +366,10 @@ if __name__ == "__main__":
 
 			print_len = 5
 			sample_result = []
-			for i in range(print_len // batch_size + 1):
+			for i in range(batchs):
 				sample_result += result[i]
-			sample_result = sample_result[:10]
+			start_idx = np.random.randint(0, len(sample_result) - print_len - 2)
+			sample_result = sample_result[start_idx: start_idx + print_len]
 
 			print("Data feed in speed: {}\tAlgorithm used:\t{}".format(speed, algorithm))
 			print("Sample predictions:\t{}\n\n".format(sample_result))
