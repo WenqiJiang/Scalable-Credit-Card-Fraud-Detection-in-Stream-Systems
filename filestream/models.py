@@ -197,7 +197,7 @@ def neural_networks(x, NN_weights, NN_biases):
         # process result
         result = []
         for i in range(len(x)):
-            result.append((x[i][0], result_arr[i]))
+            result.append((x[i][0], result_arr[i][0]))
 
     return result
 

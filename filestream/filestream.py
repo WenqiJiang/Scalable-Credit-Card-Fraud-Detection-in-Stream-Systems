@@ -229,6 +229,7 @@ if __name__ == "__main__":
 
 	conf = SparkConf().setMaster("local[1]")
 	sc = SparkContext(conf=conf)
+	sc.setLogLevel('OFF')
 
 	test_data = np.load("../data/origin_data/X_test.npy")
 	test_lable = np.load("../data/origin_data/y_test.npy")
@@ -363,7 +364,7 @@ if __name__ == "__main__":
 			sample_result = sample_result[:10]
 
 			print("Data feed in speed: {}\tAlgorithm used:\t{}".format(speed, algorithm))
-			print("Sample predictions:\t{}".format(sample_result))
+			print("Sample predictions:\t{}\n\n".format(sample_result))
 			end = time.perf_counter()
 
 			if end - start < loop_time:
