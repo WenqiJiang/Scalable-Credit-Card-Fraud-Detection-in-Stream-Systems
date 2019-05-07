@@ -81,18 +81,18 @@ def SVM(x, SVM_w, SVM_b):
         input_FM = x[1]
         output_FM = affine_forward(input_FM, SVM_w, SVM_b)
         if output_FM > 0:
-            result = (x[0], 1)
+            result = (x[0], int(1))
         else:
-            result = (x[0], 0)
+            result = (x[0], int(0))
     else:   # a list of tuple
         # preprocess 
         input_FM = []
         for i in range(len(x)):
             input_FM.append(x[i][1])
-        input_FM = np.array(input_FM)
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
 
         output_FM = affine_forward(input_FM, SVM_w, SVM_b)
-        result_arr = np.zeros(input_FM.shape[0])
+        result_arr = np.zeros(input_FM.shape[0], dtype=np.int32)
         
         # class 1: output_FM > 0:
         result_arr[np.where(output_FM >= 0)] = 1
@@ -119,20 +119,20 @@ def logistic_regression(x, LR_w, LR_b):
         output_FM = affine_forward(input_FM, LR_w, LR_b)
         prob = sigmoid(output_FM)
         if prob >= 0.5:
-            result = (x[0], 1)
+            result = (x[0], int(1))
         else:
-            result = (x[0], 0)
+            result = (x[0], int(0))
     else: # a list of tuples
         input_FM = []
         for i in range(len(x)):
             input_FM.append(x[i][1])
-        input_FM = np.array(input_FM)
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
 
         output_FM = affine_forward(input_FM, LR_w, LR_b)
         
         # if we don't want to know the probability, we can remove softmax
         prob = sigmoid(output_FM)
-        result_arr = np.zeros(prob.shape)
+        result_arr = np.zeros(prob.shape, dtype=np.int32)
         result_arr[np.where(prob >= 0.5)] = 1
 
         # process result
@@ -168,15 +168,16 @@ def neural_networks(x, NN_weights, NN_biases):
         # if we don't want to know the probability, we can remove sigmoid
         prob = sigmoid(output_FM)
         if prob >= 0.5:
-            result = (x[0], 1)
+            result = (x[0], int(1))
         else:
-            result = (x[0], 0)
+            result = (x[0], int(0))
 
     else:
         input_FM = []
+        # print(len(x))
         for i in range(len(x)):
             input_FM.append(x[i][1])
-        input_FM = np.array(input_FM)
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
     
     
         for i in range(len(NN_weights)):
@@ -189,7 +190,7 @@ def neural_networks(x, NN_weights, NN_biases):
         
         # if we don't want to know the probability, we can remove sigmoid
         prob = sigmoid(output_FM)
-        result_arr = np.zeros(prob.shape)
+        result_arr = np.zeros(prob.shape, dtype=np.int32)
         #     print("aaa", prob)
         result_arr[np.where(prob >= 0.5)] = 1
 

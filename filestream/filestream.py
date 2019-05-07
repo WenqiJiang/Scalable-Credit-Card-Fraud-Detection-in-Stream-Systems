@@ -1,8 +1,10 @@
 import numpy as np
 import time
+import argparse
 
 from pyspark import SparkConf, SparkContext
-from models import neural_networks, logistic_regression, SVM, kNN
+from models import neural_networks, logistic_regression, SVM, kNN, \
+					affine_forward, relu_forward, sigmoid
 from sklearn.ensemble import RandomForestClassifier
 
 #############################################################
@@ -85,9 +87,145 @@ def loaded_kNN(x):
 # 	"""
 # 	return RF_clf.predict(x)
 
+def NN_pipeline1(x):
+    assert len(NN_weights) == len(NN_biases)
+    
+    # extract feature maps in tuples
+    if type(x) == type((1,2)):
+        input_FM = x[1]
+        weight = NN_weights[0]
+        bias = NN_biases[0]
+        output_FM = affine_forward(input_FM, weight, bias)
+        output_FM = relu_forward(output_FM)
+
+        return (x[0], output_FM)
+
+    else:
+        input_FM = []
+        # print(len(x))
+        for i in range(len(x)):
+            input_FM.append(x[i][1])
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
+    
+        weight = NN_weights[0]
+        bias = NN_biases[0]
+        output_FM = affine_forward(input_FM, weight, bias)
+        output_FM = relu_forward(output_FM)		
+
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], output_FM[i]))
+
+        return result
+
+def NN_pipeline2(x):
+    assert len(NN_weights) == len(NN_biases)
+    
+    # extract feature maps in tuples
+    if type(x) == type((1,2)):
+        input_FM = x[1]
+        weight = NN_weights[1]
+        bias = NN_biases[1]
+        output_FM = affine_forward(input_FM, weight, bias)
+        output_FM = relu_forward(output_FM)
+
+        return (x[0], output_FM)
+
+    else:
+        input_FM = []
+        # print(len(x))
+        for i in range(len(x)):
+            input_FM.append(x[i][1])
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
+    
+        weight = NN_weights[1]
+        bias = NN_biases[1]
+        output_FM = affine_forward(input_FM, weight, bias)
+        output_FM = relu_forward(output_FM)		
+
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], output_FM[i]))
+
+        return result
+
+def NN_pipeline3(x):
+    """
+    x: tuples, (index, (features))
+    NN_weights: list of NN_weights, [W1, W2, W3 ...]
+    NN_biases: list of NN_biases, [b1, b2, b3 ...]
+    
+    return:
+    the result lable
+    """
+    assert len(NN_weights) == len(NN_biases)
+    
+    # extract feature maps in tuples
+    if type(x) == type((1,2)):
+        input_FM = x[1]
+        weight = NN_weights[2]
+        bias = NN_biases[2]
+        output_FM = affine_forward(input_FM, weight, bias)
+        
+        # if we don't want to know the probability, we can remove sigmoid
+        prob = sigmoid(output_FM)
+        if prob >= 0.5:
+            result = (x[0], int(1))
+        else:
+            result = (x[0], int(0))
+
+    else:
+        input_FM = []
+        # print(len(x))
+        for i in range(len(x)):
+            input_FM.append(x[i][1])
+        input_FM = np.reshape(np.array(input_FM), (len(x), -1))
+    
+        weight = NN_weights[2]
+        bias = NN_biases[2]
+        output_FM = affine_forward(input_FM, weight, bias)
+        
+        # if we don't want to know the probability, we can remove sigmoid
+        prob = sigmoid(output_FM)
+        result_arr = np.zeros(prob.shape, dtype=np.int32)
+        #     print("aaa", prob)
+        result_arr[np.where(prob >= 0.5)] = 1
+
+        # process result
+        result = []
+        for i in range(len(x)):
+            result.append((x[i][0], result_arr[i]))
+
+    return result
+
+def algorithms_wrapper(x):
+	"""
+	Wrap up three algorithms we will use:
+	for different speed range we will pick different algorithms,	
+	from 0 to 11,873 sample/s, we choose Neural Network      		
+	from 11,873 to 38,141 sample/s, we use Logistic Regression      
+	from 38,141 to 45,080 samples / s, we pick SVM 				    
+	for faster speed, out of our ability to process data 			
+	"""
+	return None
 
 
 if __name__ == "__main__":
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--batch_size', type=int, default=1, help="batch size, default 20")
+	######################################################################
+	#						option mode description 					 #
+	# profiling: run 10 iterations and profile average time				 #
+	# normal: run SVM, LR and NN 										 #
+	# dynamic: dynamically pick the algorithm given input speed 		 #
+	######################################################################
+	parser.add_argument('--option', type=str, default="normal", help="choices: profiling / dynamic / normal")
+	args = parser.parse_args()
+	batch_size = args.batch_size
+	option = args.option
 
 	conf = SparkConf().setMaster("local[1]")
 	sc = SparkContext(conf=conf)
@@ -99,34 +237,137 @@ if __name__ == "__main__":
 	for i in range(test_data.shape[0]):
 		test_data_tuples.append((i, test_data[i]))
 
-	x = sc.parallelize(test_data_tuples)
+	data_num = len(test_data_tuples)
+	if batch_size > data_num:
+		raise Exception("Invalid batch size: larger than the whole dataset")
+	batchs = data_num // batch_size
+	test_data_tuples = [ test_data_tuples[i * batch_size: (i + 1) * batch_size] for i in range(batchs)]
+	if batchs * batch_size < data_num:
+		test_data_tuples_tail = test_data_tuples[batchs * batch_size:]
+		if test_data_tuples_tail != []:
+			test_data_tuples.append(test_data_tuples_tail)
 
-	# sc.parallelize(test_data).map(loaded_RandomForest).collect()
-	# print("finish Random Forest")
+	if option == "profiling":
 
-	start_NN = time.perf_counter()
-	NN_result = x.map(loaded_neural_networks).collect()
-	end_NN = time.perf_counter()
-	profiling_NN = end_NN - start_NN
+		x = sc.parallelize(test_data_tuples)
+		iter_num = 10
+		profiling_NN = 0
+		profiling_LR = 0
+		profiling_SVM = 0
+		profiling_pipeline_NN = 0
+		for i in range(iter_num):
+			start_NN = time.perf_counter()
+			NN_result = x.map(loaded_neural_networks).collect()
+			end_NN = time.perf_counter()
+			profiling_NN += end_NN - start_NN
 
-	start_LR = time.perf_counter()
-	LR_result = x.map(loaded_logistic_regression).collect()
-	end_LR = time.perf_counter()
-	profiling_LR = end_LR - start_LR
+			start_LR = time.perf_counter()
+			LR_result = x.map(loaded_logistic_regression).collect()
+			end_LR = time.perf_counter()
+			profiling_LR += end_LR - start_LR
 
-	start_SVM = time.perf_counter()
-	SVM_result = x.map(loaded_SVM).collect()
-	end_SVM = time.perf_counter()
-	profiling_SVM = end_SVM - start_SVM
+			start_SVM = time.perf_counter()
+			SVM_result = x.map(loaded_SVM).collect()
+			end_SVM = time.perf_counter()
+			profiling_SVM += end_SVM - start_SVM
 
-	start_kNN = time.perf_counter()
-	kNN_result = sc.parallelize(test_data_tuples[:100]).map(loaded_kNN).collect()
-	end_kNN = time.perf_counter()
-	profiling_kNN = (end_kNN - start_kNN) * test_data.shape[0] / 100
+			start_pipeline_NN = time.perf_counter()
+			pipeline_NN_result = x.map(NN_pipeline1).map(NN_pipeline2).map(NN_pipeline3).collect()
+			end_pipeline_NN = time.perf_counter()
+			profiling_pipeline_NN += end_pipeline_NN - start_pipeline_NN
 
-	print(NN_result[0:10])
-	print(LR_result[0:10])
-	print(SVM_result[0:10])
-	print(kNN_result[0:10])
-	print("Validation data number: {}".format(test_data.shape[0]))
-	print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\tkNN time: \t{}\t".format(profiling_NN, profiling_LR, profiling_SVM, profiling_kNN))
+		print(NN_result[0:10])
+		print(LR_result[0:10])
+		print(SVM_result[0:10])
+		print(pipeline_NN_result[0:10])
+		# print(kNN_result[0:10])
+		print("Validation data number: {}".format(test_data.shape[0]))
+		print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\t".format(profiling_NN / iter_num, 
+									profiling_LR / iter_num, profiling_SVM / iter_num))
+		print("pipeline NN time:\t{}\t".format(profiling_pipeline_NN / 10))
+
+	elif option == "normal":
+		x = sc.parallelize(test_data_tuples)
+		start_NN = time.perf_counter()
+		NN_result = x.map(loaded_neural_networks).collect()
+		end_NN = time.perf_counter()
+		profiling_NN = end_NN - start_NN
+
+		start_LR = time.perf_counter()
+		LR_result = x.map(loaded_logistic_regression).collect()
+		end_LR = time.perf_counter()
+		profiling_LR = end_LR - start_LR
+
+		start_SVM = time.perf_counter()
+		SVM_result = x.map(loaded_SVM).collect()
+		end_SVM = time.perf_counter()
+		profiling_SVM = end_SVM - start_SVM
+
+		start_pipeline_NN = time.perf_counter()
+		pipeline_NN_result = x.map(NN_pipeline1).map(NN_pipeline2).map(NN_pipeline3).collect()
+		end_pipeline_NN = time.perf_counter()
+		profiling_pipeline_NN = end_pipeline_NN - start_pipeline_NN
+
+		print(NN_result[0:10])
+		print(LR_result[0:10])
+		print(SVM_result[0:10])
+		print(pipeline_NN_result[0:10])
+		# print(kNN_result[0:10])
+		print("Validation data number: {}".format(test_data.shape[0]))
+		print("NN time:\t{}\tLR time:\t{}\tSVM time:\t{}\tpipeline NN time:\t{}\t".format(profiling_NN, 
+			profiling_LR, profiling_SVM, profiling_pipeline_NN))
+
+	elif option == "dynamic":
+		#####################################################################
+		#	for different speed range we will pick different algorithms,	#
+		#	from 0 to 11,873 sample/s, we choose Neural Network      		#
+		#	from 11,873 to 38,141 sample/s, we use Logistic Regression      #
+		#	from 38,141 to 45,080 samples / s, we pick SVM 				    #
+		#	for faster speed, out of our ability to process data 			#
+		#####################################################################
+		data_num = len(test_data_tuples) * batch_size
+		loop_time = 1 # each iteration last for 0.1 seconds
+
+		for i in range(300):
+			start = time.perf_counter()
+			speed = np.random.randint(1000, 45080)
+			# speed * 0.1 -> data we will process
+			batch_num = int((speed * loop_time) // batch_size)
+			x = sc.parallelize(test_data_tuples[:batch_num])
+
+			# NN 
+			if speed <= 11873:
+				algorithm = "Neural Network"
+				result = x.map(loaded_neural_networks).collect()
+			
+			# LR
+			elif speed > 11873 and speed <= 38141:
+				algorithm = "Logistic Regression"
+				result = x.map(loaded_logistic_regression).collect()
+
+			# SVM
+			elif speed > 38142 and speed <= 45080:
+				algorithm = "Support Vector Machine"
+				result = x.map(loaded_SVM).collect()
+
+			# speed too high
+			else:
+				algorithm = None
+				result = None
+				raise Exception("Given streaming speed out of computing capacity")
+
+			print_len = 5
+			sample_result = []
+			for i in range(print_len // batch_size + 1):
+				sample_result += result[i]
+			sample_result = sample_result[:10]
+
+			print("Data feed in speed: {}\tAlgorithm used:\t{}".format(speed, algorithm))
+			print("Sample predictions:\t{}".format(sample_result))
+			end = time.perf_counter()
+
+			if end - start < loop_time:
+				time.sleep(loop_time - (end - start))
+
+	else:
+		raise Exception("Unrecognized option, please use one of these options:\nnoraml, dynamic, profiling")
