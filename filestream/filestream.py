@@ -237,7 +237,7 @@ if __name__ == "__main__":
 		test_data = np.load("../data/subsamp_data/processed_X_test.npy")
 		test_lable = np.load("../data/subsamp_data/processed_y_test.npy")
 	if dataset == "origin":
-		raise Exception ("Almost all result of origin dataset are 0s, please use subsampled dataset for demo")
+		# raise Exception ("Almost all result of origin dataset are 0s, please use subsampled dataset for demo")
 		test_data = np.load("../data/origin_data/X_test.npy")
 		test_lable = np.load("../data/origin_data/y_test.npy")
 

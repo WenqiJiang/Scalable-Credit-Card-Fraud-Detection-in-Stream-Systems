@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import argparse
 
-from pyspark import SparkContext
+from pyspark import SparkConf,SparkContext
 from pyspark.streaming import StreamingContext
 
 def relu_forward(x):
@@ -140,6 +140,7 @@ def np_return(x):
     # return arr
     # return x[1:-1].split()
     # return np.array(x[1:-1].split(), dtype=np.float64)
+    # print('size:    ',sys.getsizeof(x.encode()))
     x_split = x.split()
     # return int(x_split[0]), int(x_split[1]), np.array(x_split[2:], dtype=np.float64)
     feed_freq = int(x_split[0])
@@ -160,8 +161,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     serverPort = args.port
 
-    sc = SparkContext(appName="PythonStreamingNetworkWordCount")
-    ssc = StreamingContext(sc, 1)
+    conf = SparkConf().setMaster("local[2]")
+    sc = SparkContext(conf = conf,appName="PythonStreamingNetworkWordCount")
+    ssc = StreamingContext(sc, 0.01)
 
     sc.setLogLevel('OFF')
 
